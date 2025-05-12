@@ -1,34 +1,16 @@
 using UnityEngine;
 using UnityEditor;
 
-[ExecuteInEditMode]
 public class MeshGenerator : MonoBehaviour
 {
     [Header("Mesh Settings")]
     public int xSize = 20;
     public int zSize = 20;
-    
-    [Header("Terrain Controls")]
-    [Range(0.01f, 1f)]
-    public float noiseScale = 0.3f;
-    [Range(0.1f, 100f)]
-    public float heightMultiplier = 3f;
-    [Range(0.1f, 5f)]
     public float edgeFalloffStrength = 2f;
-
-    [Header("Fractal Noise Controls")]
-    [Range(1, 8)]
-    public int octaves = 4;
-    [Range(0.1f, 1f)]
-    public float persistence = 0.5f;
-    [Range(1f, 4f)]
-    public float lacunarity = 2f;
-
-    [Header("Layer Visibility")]
-    public bool showBaseLayer = true;
-    public bool showDetailLayers = true;
+    public Gradient gradient;
 
     [Header("Base Layer Controls")]
+    public bool showBaseLayer = true;
     [Range(0.01f, 1f)]
     public float baseNoiseScale = 0.3f;
     [Range(0.1f, 100f)]
@@ -63,55 +45,78 @@ public class MeshGenerator : MonoBehaviour
     [Range(1f, 4f)]
     public float fineDetailLacunarity = 2f;
 
+    //mesh components
     public Mesh mesh;
+    public Vector3[,] vertices2D;
     public Vector3[] vertices;
     public int[] triangles;
-    
+    //mesh properties
+    public float minHeight, maxHeight;
+    public float[,] verticesSlope;
+    //mesh colors
+    public Color[] colors;
     public Material testMaterial;
+
+    [Header("Tree Placement")]
+    public GameObject[] treePrefabs;
+    [Range(0.01f, 1f)]
+    public float treeNoiseScale = 0.1f;
+    [Range(0f, 1f)]
+    public float treeNoiseThreshold = 0.3f;
+    [Range(0f, 2f)]
+    public float treeRandomRadius = 0.5f;
+    [Range(0f, 2f)]
+    public float slopeThreshold = 0.5f;
+
+    [Header("Grass Placement")]
+    public GameObject[] grassPrefabs;
+    [Range(0.01f, 1f)]
+    public float grassNoiseScale = 0.15f;
+    [Range(0f, 1f)]
+    public float grassNoiseThreshold = 0.2f;
+    [Range(0f, 2f)]
+    public float grassRandomRadius = 0.3f;
+    [Range(0f, 2f)]
+    public float grassSlopeThreshold = 0.7f;
+
     
     void Start()
     { 
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
 
-        CreateMesh();
-        UpdateMesh();
+        GenerateNewMountain();
     }
 
 
     void Update()
     {
-        UpdateMesh();
+        if(Input.GetKeyDown(KeyCode.Space)){
+            GenerateNewMountain();
+        }
     }
 
-    void OnValidate()
-    {
-        /*
-        var meshFilter = GetComponent<MeshFilter>();
-        if (meshFilter == null)
-            return;
-
-        if (mesh == null)
-        {
-            mesh = new Mesh();
-            mesh.name = "Generated Mesh";
-            meshFilter.sharedMesh = mesh;
-        }
-        else
-        {
-            meshFilter.sharedMesh = mesh;
-        }
-
-        CreateMesh();
+    public void GenerateNewMountain(){
+        CreateMeshShape();
+        CreateMeshTriangles();
+        ResetMeshProperties();
         UpdateMesh();
-        */
+        ColorMap();
+        PlaceTreesWithRaycast();
+        //PlaceGrassWithRaycast();
+    }
+
+    //Mesh Properties Calculations
+    public void ResetMeshProperties(){
+        CalculateVerticesMinMaxHeight();
+        CalculateVerticesSlope();
     }
 
     //create a mesh with perlin noise and fall off on the edges
-    public void CreateMesh(){
-        //create vertices
-        vertices = new Vector3[(xSize + 1) * (zSize + 1)];
-        for(int i = 0, z = 0; z <= zSize; z++){
+    private void CreateMeshShape(){
+        //create vertices2D
+        vertices2D = new Vector3[xSize + 1, zSize + 1];
+        for(int z = 0; z <= zSize; z++){
             for(int x = 0; x <= xSize; x++){
                 float y = 0f;
 
@@ -120,7 +125,7 @@ public class MeshGenerator : MonoBehaviour
                 {
                     float baseSampleX = x * baseNoiseScale + baseOffset.x;
                     float baseSampleZ = z * baseNoiseScale + baseOffset.y;
-                    float baseValue = Mathf.PerlinNoise(baseSampleX, baseSampleZ) * 2f - 1f;
+                    float baseValue = Mathf.PerlinNoise(baseSampleX, baseSampleZ);
                     y += baseValue * baseHeight;
                 }
 
@@ -170,11 +175,18 @@ public class MeshGenerator : MonoBehaviour
                 float edgeZ = Mathf.Abs(Mathf.Sin(Mathf.PI * z / zSize));
                 float edgeFallOff = Mathf.Pow(edgeX, edgeFalloffStrength) * Mathf.Pow(edgeZ, edgeFalloffStrength);
                 y *= Mathf.Max(edgeFallOff, 0.01f);
-                vertices[i] = new Vector3(x, y, z);// the y value = height = noise value
-                i++;
+                vertices2D[x, z] = new Vector3(x, y, z);// the y value = height = noise value
             }
         }
+        // Flatten 2D array to 1D for Unity mesh
+        vertices = new Vector3[(xSize + 1) * (zSize + 1)];
+        int i = 0;
+        for(int z = 0; z <= zSize; z++)
+            for(int x = 0; x <= xSize; x++)
+                vertices[i++] = vertices2D[x, z];
+    }
 
+    private void CreateMeshTriangles(){
         //create triangles
         triangles = new int[xSize * zSize * 6];
         int vert = 0;
@@ -195,16 +207,185 @@ public class MeshGenerator : MonoBehaviour
             }
             vert++;
         }
-
     }
 
-    public void UpdateMesh(){
+    private void UpdateMesh(){
         mesh.Clear();
         mesh.vertices = vertices;
         mesh.triangles = triangles;
+        mesh.colors = colors;
         mesh.RecalculateNormals();
+
+        // Update or add MeshCollider
+        var meshCollider = GetComponent<MeshCollider>();
+        if (meshCollider == null)
+            meshCollider = gameObject.AddComponent<MeshCollider>();
+        meshCollider.sharedMesh = null; // Clear first
+        meshCollider.sharedMesh = mesh;
     }
 
+    //procedural generate details
+    private void ColorMap(){
+        colors = new Color[vertices.Length];
+        for(int i = 0; i < vertices.Length; i++){
+            float height = Mathf.InverseLerp(minHeight, maxHeight, vertices[i].y);
+            colors[i] = gradient.Evaluate(height);
+            int x = i % (xSize + 1);
+            int z = i / (xSize + 1);
+            // set color to grey if the slope is greater than slopeThreshold
+            if(verticesSlope[x, z] > slopeThreshold) colors[i] = Color.grey;
+        }
+    }
+    private void PlaceTreesWithRaycast()
+    {
+        var meshCollider = GetComponent<MeshCollider>();
+        if (meshCollider == null)
+        {
+            Debug.LogError("No MeshCollider found!");
+            return;
+        }
+
+        // Destroy old tree parent if it exists
+        Transform oldParent = transform.Find("Trees");
+        if (oldParent != null)
+        {
+            DestroyImmediate(oldParent.gameObject);
+        }
+        // Parent for all trees
+        GameObject treeParent = new GameObject("Trees");
+        treeParent.transform.parent = this.transform;
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            int x = i % (xSize + 1);
+            int z = i / (xSize + 1);
+            // Only allow tree if slope is under threshold
+            if (verticesSlope[x, z] > slopeThreshold) continue;
+            float perlinValue = Mathf.PerlinNoise(vertices[i].x * treeNoiseScale, vertices[i].z * treeNoiseScale);
+            if (perlinValue > treeNoiseThreshold && treePrefabs != null && treePrefabs.Length > 0)
+            {
+                // Probability increases as perlinValue approaches 1
+                float probability = Mathf.InverseLerp(treeNoiseThreshold, 1f, perlinValue);
+                if (Random.value < probability)
+                {
+                    Vector3 rayOrigin = vertices[i] + Vector3.up * 100f;
+                    Ray ray = new Ray(rayOrigin, Vector3.down);
+                    RaycastHit hit;
+                    if (Physics.Raycast(ray, out hit, 200f))
+                    {
+                        if (hit.collider == meshCollider)
+                        {
+                            // Randomly select a prefab from the array
+                            int prefabIndex = Random.Range(0, treePrefabs.Length);
+                            GameObject prefabToUse = treePrefabs[prefabIndex];
+                            if (prefabToUse != null)
+                            {
+                                Quaternion randomYRot = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
+                                Instantiate(prefabToUse, hit.point, randomYRot, treeParent.transform);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void PlaceGrassWithRaycast()
+    {
+        var meshCollider = GetComponent<MeshCollider>();
+        if (meshCollider == null)
+        {
+            Debug.LogError("No MeshCollider found!");
+            return;
+        }
+
+        // Destroy old grass parent if it exists
+        Transform oldParent = transform.Find("Grass");
+        if (oldParent != null)
+        {
+            DestroyImmediate(oldParent.gameObject);
+        }
+        // Parent for all grass
+        GameObject grassParent = new GameObject("Grass");
+        grassParent.transform.parent = this.transform;
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            int x = i % (xSize + 1);
+            int z = i / (xSize + 1);
+            // Only allow grass if slope is under threshold
+            if (verticesSlope[x, z] > grassSlopeThreshold) continue;
+            float perlinValue = Mathf.PerlinNoise(vertices[i].x * grassNoiseScale, vertices[i].z * grassNoiseScale);
+            if (perlinValue > grassNoiseThreshold && grassPrefabs != null && grassPrefabs.Length > 0)
+            {
+                float probability = Mathf.InverseLerp(grassNoiseThreshold, 1f, perlinValue);
+                if (Random.value < probability)
+                {
+                    Vector2 randomCircle = Random.insideUnitCircle * grassRandomRadius;
+                    Vector3 randomPos = vertices[i] + new Vector3(randomCircle.x, 0, randomCircle.y);
+
+                    Vector3 rayOrigin = randomPos + Vector3.up * 100f;
+                    Ray ray = new Ray(rayOrigin, Vector3.down);
+                    RaycastHit hit;
+                    if (Physics.Raycast(ray, out hit, 200f))
+                    {
+                        if (hit.collider == meshCollider)
+                        {
+                            int prefabIndex = Random.Range(0, grassPrefabs.Length);
+                            GameObject prefabToUse = grassPrefabs[prefabIndex];
+                            if (prefabToUse != null)
+                            {
+                                Quaternion randomYRot = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
+                                GameObject grass = Instantiate(prefabToUse, hit.point, randomYRot, grassParent.transform);
+                                grass.transform.localScale = Vector3.one * 0.3f;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void CalculateVerticesMinMaxHeight(){
+        //go through all the vertices and find the min and max height
+        minHeight = 0;
+        maxHeight = 0;
+        foreach(Vector3 vertex in vertices){
+            if(vertex.y < minHeight) minHeight = vertex.y;
+            if(vertex.y > maxHeight) maxHeight = vertex.y;
+        }
+    }
+
+    private void CalculateVerticesSlope(){
+        // Calculate slope for each vertex
+        verticesSlope = new float[xSize + 1, zSize + 1];
+        for (int z = 0; z <= zSize; z++)
+        {
+            for (int x = 0; x <= xSize; x++)
+            {
+                float totalSlope = 0f;
+                int validNeighbors = 0;
+                Vector3 current = vertices2D[x, z];
+                // Check 4-connected neighbors
+                int[,] neighbors = new int[,] { {1,0}, {-1,0}, {0,1}, {0,-1} };
+                for (int n = 0; n < 4; n++)
+                {
+                    int nx = x + neighbors[n,0];
+                    int nz = z + neighbors[n,1];
+                    if (nx >= 0 && nx <= xSize && nz >= 0 && nz <= zSize)
+                    {
+                        Vector3 neighbor = vertices2D[nx, nz];
+                        float heightDiff = Mathf.Abs(current.y - neighbor.y);
+                        float dist = Vector2.Distance(new Vector2(x, z), new Vector2(nx, nz));
+                        float slope = heightDiff / dist;
+                        totalSlope += slope;
+                        validNeighbors++;
+                    }
+                }
+                verticesSlope[x, z] = validNeighbors > 0 ? totalSlope / validNeighbors : 0f;
+            }
+        }
+    }
     private void OnDrawGizmos(){
         if(vertices == null) return;
         Gizmos.color = Color.black;
