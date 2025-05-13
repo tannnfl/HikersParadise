@@ -79,6 +79,7 @@ namespace proceduralMountain
             public bool isHighlighted = false;
             public GameObject tree;
             private MeshGenerator parent;
+            private Color originalColor;
 
             public VertexData(Vector3 position, float slope, Color color, MeshGenerator parent)
             {
@@ -87,6 +88,7 @@ namespace proceduralMountain
                 this.color = color;
                 this.tree = null;
                 this.parent = parent;
+                this.originalColor = color;
             }
 
             public Color GetDisplayColor()
@@ -97,6 +99,16 @@ namespace proceduralMountain
             public void SetColor(Color c)
             {
                 this.color = c;
+            }
+
+            public void StoreOriginalColor()
+            {
+                originalColor = color;
+            }
+
+            public void RestoreOriginalColor()
+            {
+                color = originalColor;
             }
 
             public void SetHeight(float h)
@@ -458,5 +470,6 @@ namespace proceduralMountain
                     colors[i++] = vertices2D[x, z].GetDisplayColor();
             mesh.colors = colors;
         }
+
     }
 }

@@ -31,7 +31,8 @@ public class GameManager : MonoBehaviour
     private GameObject brush;
     public GameObject MenuUI;
     public GameObject PlayingUI;
-    public GameState currentGameState = GameState.Menu;
+    private GameState _currentState = GameState.Menu;
+public GameState CurrentState => _currentState;
     
     MeshGenerator meshGenerator;
 
@@ -39,163 +40,140 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        Debug.Log("GameManager Awake: " + this);
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else if (instance != this)
-        {
-            Debug.LogWarning("Destroying duplicate GameManager: " + this);
-            Destroy(gameObject);
-        }
         meshGenerator = FindFirstObjectByType<MeshGenerator>().GetComponent<MeshGenerator>();
+        brush = Instantiate(brushPrefab, Vector3.zero, Quaternion.identity);
+        brush.SetActive(false); // Start inactive
     }
 
     // Update is called once per frame
     void Update()
     {
-        UpdateGameState();
-        if(brush != null){
-            print(brush);
-        }
-        print(brush);
+        StateUpdate(_currentState);
+        print(_currentState);
     }
 
-    private void UpdateGameState(){
-        if(currentGameState != GameState.Menu && currentGameState != GameState.Playing){
+    private void StateUpdate(GameState state)
+{
+    switch (state)
+    {
+        case GameState.Menu:
+            UpdateMenu();
+            break;
+        case GameState.Playing:
+            UpdatePlaying();
+            break;
+        case GameState.Dig:
             UpdateBrush(Color.white);
-            if(Input.GetKeyDown(KeyCode.Escape)){
-                ChangeGameState(GameState.Playing);
-            }
-        }
-        switch(currentGameState){
-            case GameState.Menu:
-                UpdateMenu();
-                break;
-            case GameState.Playing:
-                //switch game state
-                UpdatePlaying();
-                break;
-            case GameState.Dig:
-                UpdateDig();
-                break;
-            case GameState.Raise:
-                UpdateRaise();
-                break;
-            case GameState.Flatten:
-                UpdateFlatten();
-                break;
-            case GameState.Smooth:
-                UpdateSmooth();
-                break;
-            case GameState.PaintGrass:
-                UpdatePaintGrass();
-                break;
-            case GameState.PaintRock:
-                UpdatePaintRock();
-                break;
-            case GameState.PlaceTree:
-                UpdatePlaceTree();
-                break;
-            case GameState.Demolish:
-                UpdateDemolish();
-                break;
-            case GameState.CreateTrail:
-                UpdateCreateTrail();
-                break;
-            case GameState.EditTrail:
-                UpdateEditTrail();
-                break;
-        }
+            UpdateDig();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+        case GameState.Raise:
+            UpdateBrush(Color.white);
+            UpdateRaise();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+        case GameState.Flatten:
+            UpdateBrush(Color.white);
+            UpdateFlatten();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+        case GameState.Smooth:
+            UpdateBrush(Color.white);
+            UpdateSmooth();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+        case GameState.PaintGrass:
+            UpdateBrush(Color.green);
+            UpdatePaintGrass();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+        case GameState.PaintRock:
+            UpdateBrush(Color.gray);
+            UpdatePaintRock();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+        case GameState.PlaceTree:
+            UpdateBrush(Color.green);
+            UpdatePlaceTree();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+        case GameState.Demolish:
+            UpdateBrush(Color.red);
+            UpdateDemolish();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+        case GameState.CreateTrail:
+            UpdateBrush(Color.yellow);
+            UpdateCreateTrail();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+        case GameState.EditTrail:
+            UpdateBrush(Color.white);
+            UpdateEditTrail();
+            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+            break;
+    }
+}
+
+    public void ChangeGameState(GameState newState)
+{
+    if (_currentState == newState)
+    {
+        Debug.Log("Already in state: " + newState);
+        return;
     }
 
-    public void ChangeGameState(GameState newState){
-        EndGameState();
+    // Exit logic for the old state
+    OnStateExit(_currentState);
 
-        // Always destroy the brush when entering Playing or Menu
-        if ((newState == GameState.Playing || newState == GameState.Menu) && brush != null) {
-            Destroy(brush);
-            Debug.Log("Brush destroyed");
-            //brush = null;
-        }
+    // Enter logic for the new state
+    _currentState = newState;
+    OnStateEnter(_currentState);
 
-        currentGameState = newState;
-        OnGameStateChanged?.Invoke(newState);
+    Debug.Log("GameState changed to: " + _currentState);
+    OnGameStateChanged?.Invoke(_currentState);
+}
+    private void OnStateExit(GameState state)
+{
+    switch (state)
+    {
+        case GameState.Menu:
+            if (MenuUI != null) MenuUI.SetActive(false);
+            print("exitmenu");
+            break;
+        case GameState.Playing:
+            if (PlayingUI != null) PlayingUI.SetActive(false);
+            print("exitplaying");
+            break;
+        default:
+            print("exitstate" + state);
+            break;
+    }
+}
 
-        if(newState == GameState.Playing){
-            Time.timeScale = 1;
-        }
-
-        if(newState != GameState.Menu && newState != GameState.Playing){
-            brush = Instantiate(brushPrefab, Vector3.zero, Quaternion.identity);
-            Debug.Log("Brush instantiated: " + brush);
-        }
-        Debug.Log("GameState changed to: " + newState);
-        switch(newState){
+    private void OnStateEnter(GameState state)
+    {
+        switch (state)
+        {
             case GameState.Menu:
+                if (MenuUI != null) MenuUI.SetActive(true);
                 Time.timeScale = 0;
+                MoveBrushOffscreen();
+                DeselectAllVertices();
+                print("entermenu");
                 break;
-            case GameState.Playing: 
+            case GameState.Playing:
+                if (PlayingUI != null) PlayingUI.SetActive(true);
                 Time.timeScale = 1;
+                MoveBrushOffscreen();
+                DeselectAllVertices();
+                print("enterplaying");
                 break;
-            case GameState.Dig:
+            default:
+                // Edit states: hide both UIs, show brush
                 Time.timeScale = 0;
-                break;
-            case GameState.Raise:
-                Time.timeScale = 0;
-                break;
-            case GameState.Flatten:
-                Time.timeScale = 0;
-                break;
-            case GameState.Smooth:
-                Time.timeScale = 0;
-                break;
-            case GameState.PaintGrass:
-                Time.timeScale = 0; 
-                break;
-            case GameState.PaintRock:
-                Time.timeScale = 0;
-                break;
-            case GameState.PlaceTree:
-                Time.timeScale = 0;
-                break;
-            case GameState.Demolish:
-                Time.timeScale = 0;
-                break;
-            case GameState.CreateTrail:
-                Time.timeScale = 0;
-                break;
-            case GameState.EditTrail:
-                Time.timeScale = 0;
-                break;
-        }
-    }
-    public void EndGameState(){
-        if (brush != null) Destroy(brush);
-        switch(currentGameState){
-            case GameState.Menu:
-                if(MenuUI != null){
-                    MenuUI.SetActive(false);
-                }
-                break;
-            case GameState.Playing:
-                Time.timeScale = 0;
-                if(PlayingUI != null){
-                    PlayingUI.SetActive(false);
-                }
-                break;
-            case GameState.Dig:
-            case GameState.Raise:
-            case GameState.Flatten:
-            case GameState.Smooth:
-            case GameState.PaintGrass:
-            case GameState.PaintRock:
-            case GameState.PlaceTree:
-            case GameState.Demolish:
-            case GameState.CreateTrail:
-            case GameState.EditTrail:
+                print("enterstate" + state);
+                // Brush will be positioned by UpdateBrush when needed
                 break;
         }
     }
@@ -224,108 +202,17 @@ public class GameManager : MonoBehaviour
     public void OnClickResetGame(){
 
     }
-    public void OnClickDig(){
-        ChangeGameState(GameState.Dig);
-    }
-    public void OnClickRaise(){
-        ChangeGameState(GameState.Raise);
-    }
-    public void OnClickFlatten(){
-        ChangeGameState(GameState.Flatten);
-    }
-    public void OnClickSmooth(){
-        ChangeGameState(GameState.Smooth);
-    }
-    public void OnClickPaintGrass(){
-        ChangeGameState(GameState.PaintGrass);
-    }
-    public void OnClickPaintRock(){
-        ChangeGameState(GameState.PaintRock);
-    }
-    public void OnClickPlaceTree(){
-        ChangeGameState(GameState.PlaceTree);
-    }
-    public void OnClickDemolish(){
-        ChangeGameState(GameState.Demolish);
-    }
-    public void OnClickCreateTrail(){
-        ChangeGameState(GameState.CreateTrail);
-    }
-    public void OnClickEditTrail(){
-        ChangeGameState(GameState.EditTrail);
-    }
-    public void OnClickBack(){
-        if(currentGameState != GameState.Menu && currentGameState != GameState.Playing){
-            ChangeGameState(GameState.Playing);
-        }
-    }
-
-    // change state with key
-    private void CanGoToMenu(){
-        if(Input.GetKeyDown(KeyCode.Escape)){
-            ChangeGameState(GameState.Menu);
-        }
-    }
-
-    private void CanGoToPlaying(){
-        if(Input.GetKeyDown(KeyCode.Escape)){
-            ChangeGameState(GameState.Playing);
-        }
-    }
-
-    private void CanGoToDig(){
-        if(Input.GetKeyDown(KeyCode.G)){
-            ChangeGameState(GameState.Dig);
-        }
-    }
-
-    private void CanGoToRaise(){
-        if(Input.GetKeyDown(KeyCode.R)){
-            ChangeGameState(GameState.Raise);
-        }
-    }
-
-    private void CanGoToFlatten(){
-        if(Input.GetKeyDown(KeyCode.F)){
-            ChangeGameState(GameState.Flatten);
-        }
-    }
-
-    private void CanGoToSmooth(){
-        if(Input.GetKeyDown(KeyCode.S)){
-            ChangeGameState(GameState.Smooth);
-        }
-    }
-
-    private void CanGoToPaintGrass(){
-        if(Input.GetKeyDown(KeyCode.H)){
-            ChangeGameState(GameState.PaintGrass);
-        }
-    }
-
-    private void CanGoToPaintRock(){
-        if(Input.GetKeyDown(KeyCode.K)){
-            ChangeGameState(GameState.PaintRock);
-        }
-    }
-
-    private void CanGoToDemolish(){
-        if(Input.GetKeyDown(KeyCode.D)){
-            ChangeGameState(GameState.Demolish);
-        }
-    }
-
-    private void CanGoToCreateTrail(){
-        if(Input.GetKeyDown(KeyCode.C)){
-            ChangeGameState(GameState.CreateTrail);
-        }
-    }
-
-    private void CanGoToEditTrail(){
-        if(Input.GetKeyDown(KeyCode.E)){
-            ChangeGameState(GameState.EditTrail);
-        }
-    }
+    public void OnClickDig() { ChangeGameState(GameState.Dig); }
+    public void OnClickRaise() { ChangeGameState(GameState.Raise); }
+    public void OnClickFlatten() { ChangeGameState(GameState.Flatten); }
+    public void OnClickSmooth() { ChangeGameState(GameState.Smooth); }
+    public void OnClickPaintGrass() { ChangeGameState(GameState.PaintGrass); }
+    public void OnClickPaintRock() { ChangeGameState(GameState.PaintRock); }
+    public void OnClickPlaceTree() { ChangeGameState(GameState.PlaceTree); }
+    public void OnClickDemolish() { ChangeGameState(GameState.Demolish); }
+    public void OnClickCreateTrail() { ChangeGameState(GameState.CreateTrail); }
+    public void OnClickEditTrail() { ChangeGameState(GameState.EditTrail); }
+    public void OnClickBack() { ChangeGameState(GameState.Playing); }
 
     public void UpdateBrush(Color highlightColor)
     {
@@ -338,12 +225,13 @@ public class GameManager : MonoBehaviour
         if (Physics.Raycast(ray, out hit)) {
             if (LayerMask.LayerToName(hit.collider.gameObject.layer) == "Mountain") {
                 brush.transform.position = hit.point;
-                // Reset color of previously selected vertices
+
+                // Reset color of previously selected vertices to their original colors
                 if (previousSelectedVertices != null)
                 {
                     foreach (var v in previousSelectedVertices)
                     {
-                        v.SetColor(highlightColor); // Or your default color
+                        v.RestoreOriginalColor();
                     }
                 }
 
@@ -361,7 +249,8 @@ public class GameManager : MonoBehaviour
                         if (Vector3.Distance(vertexWorldPos, brushPosition) <= brushRadius)
                         {
                             selected.Add(v);
-                            v.SetColor(Color.red); // Set selected color
+                            v.StoreOriginalColor(); // Store the current color before changing it
+                            v.SetColor(highlightColor); // Set selected color
                         }
                     }
                 }
@@ -372,7 +261,40 @@ public class GameManager : MonoBehaviour
             }
         } else {
             brush.transform.position = new Vector3(0, 0, -100);
+            
+            // Reset colors when brush is not over terrain
+            if (previousSelectedVertices != null)
+            {
+                foreach (var v in previousSelectedVertices)
+                {
+                    v.RestoreOriginalColor();
+                }
+                meshGenerator.ApplyVertexColors();
+                previousSelectedVertices = null;
+                selectedVertices = null;
+            }
         }
+    }
+
+    // Deselect all vertices and restore their original colors
+    private void DeselectAllVertices()
+    {
+        if (previousSelectedVertices != null)
+        {
+            foreach (var v in previousSelectedVertices)
+            {
+                v.RestoreOriginalColor();
+            }
+            meshGenerator.ApplyVertexColors();
+            previousSelectedVertices = null;
+            selectedVertices = null;
+        }
+    }
+
+    private void MoveBrushOffscreen()
+    {
+        if (brush != null)
+            brush.transform.position = new Vector3(0, 0, -100);
     }
 
 }
