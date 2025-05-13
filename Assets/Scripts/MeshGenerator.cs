@@ -71,14 +71,17 @@ namespace proceduralMountain
         //mesh components
         public Mesh mesh;
 
-        public struct VertexData{
+        public class VertexData
+        {
             public Vector3 position;
             public float slope;
             public Color color;
+            public bool isHighlighted = false;
             public GameObject tree;
             private MeshGenerator parent;
 
-            public VertexData(Vector3 position, float slope, Color color, MeshGenerator parent){
+            public VertexData(Vector3 position, float slope, Color color, MeshGenerator parent)
+            {
                 this.position = position;
                 this.slope = slope;
                 this.color = color;
@@ -86,16 +89,23 @@ namespace proceduralMountain
                 this.parent = parent;
             }
 
+            public Color GetDisplayColor()
+            {
+                return isHighlighted ? Color.red : color;
+            }
+
             public void SetColor(Color c)
             {
                 this.color = c;
             }
 
-            public void SetHeight(float h){
+            public void SetHeight(float h)
+            {
                 this.position.y = h;
             }
             
-            public void PlaceTree(){
+            public void PlaceTree()
+            {
                 if (parent.treePrefabs != null && parent.treePrefabs.Length > 0)
                 {
                     this.tree = UnityEngine.Object.Instantiate(parent.treePrefabs[Random.Range(0, parent.treePrefabs.Length)], this.position, Quaternion.identity);
@@ -103,7 +113,8 @@ namespace proceduralMountain
                 }
             }
 
-            public void DestroyTree(){
+            public void DestroyTree()
+            {
                 if (this.tree != null)
                 {
                     UnityEngine.Object.Destroy(this.tree);
@@ -437,6 +448,15 @@ namespace proceduralMountain
             for(int i = 0; i < vertices.Length; i++){
                 Gizmos.DrawSphere(vertices[i], 0.1f);
             }
+        }
+
+        public void ApplyVertexColors()
+        {
+            int i = 0;
+            for (int z = 0; z <= zSize; z++)
+                for (int x = 0; x <= xSize; x++)
+                    colors[i++] = vertices2D[x, z].GetDisplayColor();
+            mesh.colors = colors;
         }
     }
 }
