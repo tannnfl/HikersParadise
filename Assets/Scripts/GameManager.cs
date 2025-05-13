@@ -1,14 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
-using proceduralMountain;
+using AnnaUtility.ProceduralMountain;
 using System;
 
 public class GameManager : MonoBehaviour
 {
     [Header("User UI")]
     public GameObject brushPrefab;
-
-    public static GameManager instance;
     public enum GameState{
         Menu,//special state for menu.
         Playing,//special state for playing
@@ -31,8 +29,7 @@ public class GameManager : MonoBehaviour
     private GameObject brush;
     public GameObject MenuUI;
     public GameObject PlayingUI;
-    private GameState _currentState = GameState.Menu;
-public GameState CurrentState => _currentState;
+    private GameState _currentState = GameState.Playing;
     
     MeshGenerator meshGenerator;
 
@@ -48,108 +45,119 @@ public GameState CurrentState => _currentState;
     // Update is called once per frame
     void Update()
     {
+        // Keyboard shortcuts for state changes
+        if (Input.GetKeyDown(KeyCode.G)) ChangeGameState(GameState.Dig);
+        if (Input.GetKeyDown(KeyCode.R)) ChangeGameState(GameState.Raise);
+        if (Input.GetKeyDown(KeyCode.F)) ChangeGameState(GameState.Flatten);
+        if (Input.GetKeyDown(KeyCode.S)) ChangeGameState(GameState.Smooth);
+        if (Input.GetKeyDown(KeyCode.H)) ChangeGameState(GameState.PaintGrass);
+        if (Input.GetKeyDown(KeyCode.K)) ChangeGameState(GameState.PaintRock);
+        if (Input.GetKeyDown(KeyCode.T)) ChangeGameState(GameState.PlaceTree);
+        if (Input.GetKeyDown(KeyCode.D)) ChangeGameState(GameState.Demolish);
+        if (Input.GetKeyDown(KeyCode.C)) ChangeGameState(GameState.CreateTrail);
+        if (Input.GetKeyDown(KeyCode.E)) ChangeGameState(GameState.EditTrail);
         StateUpdate(_currentState);
         print(_currentState);
     }
 
     private void StateUpdate(GameState state)
-{
-    switch (state)
     {
-        case GameState.Menu:
-            UpdateMenu();
-            break;
-        case GameState.Playing:
-            UpdatePlaying();
-            break;
-        case GameState.Dig:
-            UpdateBrush(Color.white);
-            UpdateDig();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-        case GameState.Raise:
-            UpdateBrush(Color.white);
-            UpdateRaise();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-        case GameState.Flatten:
-            UpdateBrush(Color.white);
-            UpdateFlatten();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-        case GameState.Smooth:
-            UpdateBrush(Color.white);
-            UpdateSmooth();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-        case GameState.PaintGrass:
-            UpdateBrush(Color.green);
-            UpdatePaintGrass();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-        case GameState.PaintRock:
-            UpdateBrush(Color.gray);
-            UpdatePaintRock();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-        case GameState.PlaceTree:
-            UpdateBrush(Color.green);
-            UpdatePlaceTree();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-        case GameState.Demolish:
-            UpdateBrush(Color.red);
-            UpdateDemolish();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-        case GameState.CreateTrail:
-            UpdateBrush(Color.yellow);
-            UpdateCreateTrail();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-        case GameState.EditTrail:
-            UpdateBrush(Color.white);
-            UpdateEditTrail();
-            if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
-            break;
-    }
-}
-
-    public void ChangeGameState(GameState newState)
-{
-    if (_currentState == newState)
-    {
-        Debug.Log("Already in state: " + newState);
-        return;
+        switch (state)
+        {
+            case GameState.Menu:
+                UpdateMenu();
+                break;
+            case GameState.Playing:
+                UpdatePlaying();
+                break;
+            case GameState.Dig:
+                UpdateBrush(Color.white);
+                UpdateDig();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+            case GameState.Raise:
+                UpdateBrush(Color.white);
+                UpdateRaise();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+            case GameState.Flatten:
+                UpdateBrush(Color.white);
+                UpdateFlatten();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+            case GameState.Smooth:
+                UpdateBrush(Color.white);
+                UpdateSmooth();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+            case GameState.PaintGrass:
+                UpdateBrush(Color.green);
+                UpdatePaintGrass();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+            case GameState.PaintRock:
+                UpdateBrush(Color.gray);
+                UpdatePaintRock();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+            case GameState.PlaceTree:
+                UpdateBrush(Color.green);
+                UpdatePlaceTree();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+            case GameState.Demolish:
+                UpdateBrush(Color.red);
+                UpdateDemolish();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+            case GameState.CreateTrail:
+                UpdateBrush(Color.yellow);
+                UpdateCreateTrail();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+            case GameState.EditTrail:
+                UpdateBrush(Color.white);
+                UpdateEditTrail();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
+                break;
+        }
     }
 
-    // Exit logic for the old state
-    OnStateExit(_currentState);
-
-    // Enter logic for the new state
-    _currentState = newState;
-    OnStateEnter(_currentState);
-
-    Debug.Log("GameState changed to: " + _currentState);
-    OnGameStateChanged?.Invoke(_currentState);
-}
-    private void OnStateExit(GameState state)
-{
-    switch (state)
+        public void ChangeGameState(GameState newState)
     {
-        case GameState.Menu:
-            if (MenuUI != null) MenuUI.SetActive(false);
-            print("exitmenu");
-            break;
-        case GameState.Playing:
-            if (PlayingUI != null) PlayingUI.SetActive(false);
-            print("exitplaying");
-            break;
-        default:
-            print("exitstate" + state);
-            break;
+        if (_currentState == newState)
+        {
+            Debug.Log("Already in state: " + newState);
+            return;
+        }
+
+        // Exit logic for the old state
+        OnStateExit(_currentState);
+
+        // Enter logic for the new state
+        _currentState = newState;
+        OnStateEnter(_currentState);
+
+        Debug.Log("GameState changed to: " + _currentState);
+        OnGameStateChanged?.Invoke(_currentState);
     }
-}
+        private void OnStateExit(GameState state)
+    {
+        switch (state)
+        {
+            case GameState.Menu:
+                if (MenuUI != null) MenuUI.SetActive(false);
+                print("exitmenu");
+                break;
+            case GameState.Playing:
+                if (PlayingUI != null) PlayingUI.SetActive(false);
+                print("exitplaying");
+                break;
+            default:
+                print("exitstate" + state);
+                break;
+        }
+    }
 
     private void OnStateEnter(GameState state)
     {

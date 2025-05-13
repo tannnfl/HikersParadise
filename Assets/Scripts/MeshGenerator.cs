@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace proceduralMountain
+namespace AnnaUtility.ProceduralMountain
 {
     public class MeshGenerator : MonoBehaviour
     {
