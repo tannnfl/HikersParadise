@@ -32,23 +32,8 @@ public class CameraController : MonoBehaviour
             transform.RotateAround(Center.transform.position, Vector3.up, mouseX * rotationSpeed);
         }
 
-        // move center with wasd
-        if (Input.GetKey(KeyCode.W))
-        {
-            Center.transform.position += transform.forward * moveSpeed;
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            Center.transform.position -= transform.forward * moveSpeed;
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            Center.transform.position -= transform.right * moveSpeed;
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            Center.transform.position += transform.right * moveSpeed;
-        }
+        //move center with wasd
+        //maybe not needed
         
     }
     

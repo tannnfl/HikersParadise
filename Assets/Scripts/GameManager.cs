@@ -2,9 +2,11 @@ using UnityEngine;
 using System.Collections.Generic;
 using AnnaUtility.ProceduralMountain;
 using System;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
+    float t;
     [Header("User UI")]
     public GameObject brushPrefab;
     public enum GameState{
@@ -29,11 +31,16 @@ public class GameManager : MonoBehaviour
     private GameObject brush;
     public GameObject MenuUI;
     public GameObject PlayingUI;
-    private GameState _currentState = GameState.Playing;
+    [Header("Painting Colors")]
+    public Color GrassColor = new Color(0.3f, 0.7f, 0.2f, 1f);
+    public Color StoneColor = new Color(0.5f, 0.5f, 0.5f, 1f);
+    private GameState _currentState = GameState.Menu;
     
     MeshGenerator meshGenerator;
 
     public static event Action<GameState> OnGameStateChanged;
+
+    private MeshGenerator.VertexData closestVertex; // Store the closest vertex
 
     void Awake()
     {
@@ -66,9 +73,11 @@ public class GameManager : MonoBehaviour
         {
             case GameState.Menu:
                 UpdateMenu();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Playing);
                 break;
             case GameState.Playing:
                 UpdatePlaying();
+                if (Input.GetKeyDown(KeyCode.Escape)) ChangeGameState(GameState.Menu);
                 break;
             case GameState.Dig:
                 UpdateBrush(Color.white);
@@ -150,7 +159,6 @@ public class GameManager : MonoBehaviour
                 print("exitmenu");
                 break;
             case GameState.Playing:
-                if (PlayingUI != null) PlayingUI.SetActive(false);
                 print("exitplaying");
                 break;
             default:
@@ -164,6 +172,7 @@ public class GameManager : MonoBehaviour
         switch (state)
         {
             case GameState.Menu:
+                if (PlayingUI != null) PlayingUI.SetActive(false);
                 if (MenuUI != null) MenuUI.SetActive(true);
                 Time.timeScale = 0;
                 MoveBrushOffscreen();
@@ -172,6 +181,7 @@ public class GameManager : MonoBehaviour
                 break;
             case GameState.Playing:
                 if (PlayingUI != null) PlayingUI.SetActive(true);
+                if (MenuUI != null) MenuUI.SetActive(false);
                 Time.timeScale = 1;
                 MoveBrushOffscreen();
                 DeselectAllVertices();
@@ -189,14 +199,156 @@ public class GameManager : MonoBehaviour
     // State Updates
     private void UpdateMenu(){}
     private void UpdatePlaying(){}
-    private void UpdateDig(){}
-    private void UpdateRaise(){}
-    private void UpdateFlatten(){}
-    private void UpdateSmooth(){}
-    private void UpdatePaintGrass(){}
-    private void UpdatePaintRock(){}
-    private void UpdatePlaceTree(){}
-    private void UpdateDemolish(){}
+    private void UpdateDig(){
+        if (Input.GetMouseButton(0)){
+            t -= Time.deltaTime;
+            if(t <= 0f){
+                foreach (var v in selectedVertices){
+                    v.position.y -= 1;
+                }
+                meshGenerator.UpdateMesh();
+                t = 0.1f; // Repeat every 0.1 seconds while holding
+            }
+        } else {
+            t = 0f; // Reset timer when mouse is released
+        }
+    }
+    private void UpdateRaise(){
+        if (Input.GetMouseButton(0)){
+            t -= Time.deltaTime;
+            if(t <= 0f){
+                foreach (var v in selectedVertices){
+                    v.position.y += 1;
+                }
+                meshGenerator.UpdateMesh();
+                t = 0.1f; // Repeat every 0.1 seconds while holding
+            }
+        } else {
+            t = 0f; // Reset timer when mouse is released
+        }
+    }
+    private void UpdateFlatten(){
+        if (Input.GetMouseButton(0)){
+            t -= Time.deltaTime;
+            if(t <= 0f && closestVertex != null){
+                float targetHeight = closestVertex.position.y;
+                foreach (var v in selectedVertices){
+                    v.position.y = targetHeight;
+                }
+                meshGenerator.UpdateMesh();
+                t = 0.1f; // Repeat every 0.1 seconds while holding
+            }
+        } else {
+            t = 0f; // Reset timer when mouse is released
+        }
+    }
+    private void UpdateSmooth(){
+        if (Input.GetMouseButton(0)){
+                foreach (var v in selectedVertices){
+                    float sum = v.position.y;
+                    int count = 1;
+                    // Find neighbors in the 2D array
+                    for (int dz = -1; dz <= 1; dz++){
+                        for (int dx = -1; dx <= 1; dx++){
+                            if (Mathf.Abs(dx) + Mathf.Abs(dz) != 1) continue; // Only up/down/left/right
+                            int nx = Mathf.RoundToInt(v.position.x) + dx;
+                            int nz = Mathf.RoundToInt(v.position.z) + dz;
+                            if (nx >= 0 && nx <= meshGenerator.xSize && nz >= 0 && nz <= meshGenerator.zSize){
+                                var neighbor = meshGenerator.vertices2D[nx, nz];
+                                sum += neighbor.position.y;
+                                count++;
+                            }
+                        }
+                    }
+                    v.position.y = sum / count;
+                }
+                meshGenerator.UpdateMesh();
+                t = 0.1f; // Repeat every 0.1 seconds while holding
+        }
+    }
+    private void UpdatePaintGrass()
+    {
+        if (Input.GetMouseButton(0)){
+                foreach (var v in selectedVertices){
+                    v.SetColor(GrassColor);
+                    v.StoreOriginalColor();
+                    Debug.Log("Set color to: " + GrassColor);
+                }
+                //meshGenerator.UpdateMesh();
+                meshGenerator.ApplyVertexRealColors();
+                t = 0.1f;
+        }
+    }
+    private void UpdatePaintRock()
+    {
+        Debug.Log("UpdatePaintRock called, selectedVertices: " + (selectedVertices != null ? selectedVertices.Length.ToString() : "null"));
+        if (Input.GetMouseButton(0)){
+            t -= Time.deltaTime;
+            if(t <= 0f){
+                if (selectedVertices == null){
+                    Debug.Log("selectedVertices is null");
+                    return;
+                }
+                foreach (var v in selectedVertices){
+                    v.SetColor(StoneColor);
+                    v.StoreOriginalColor();
+                    Debug.Log("Set color to: " + StoneColor);
+                }
+                //meshGenerator.UpdateMesh();
+                meshGenerator.ApplyVertexRealColors();
+                t = 0.1f;
+            }
+        } else {
+            t = 0f;
+        }
+    }
+    private void UpdatePlaceTree()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            t -= Time.deltaTime;
+            if (t <= 0f)
+            {
+                foreach (var v in selectedVertices)
+                {
+                    if (v.tree == null && meshGenerator.treePrefabs != null && meshGenerator.treePrefabs.Length > 0)
+                    {
+                        int prefabIndex = UnityEngine.Random.Range(0, meshGenerator.treePrefabs.Length);
+                        GameObject tree = Instantiate(meshGenerator.treePrefabs[prefabIndex], meshGenerator.transform.TransformPoint(v.position), Quaternion.identity, meshGenerator.transform);
+                        v.tree = tree;
+                    }
+                }
+                t = 0.1f;
+            }
+        }
+        else
+        {
+            t = 0f;
+        }
+    }
+    private void UpdateDemolish()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            t -= Time.deltaTime;
+            if (t <= 0f)
+            {
+                foreach (var v in selectedVertices)
+                {
+                    if (v.tree != null)
+                    {
+                        Destroy(v.tree);
+                        v.tree = null;
+                    }
+                }
+                t = 0.1f;
+            }
+        }
+        else
+        {
+            t = 0f;
+        }
+    }
     private void UpdateCreateTrail(){}
     private void UpdateEditTrail(){
         
@@ -205,10 +357,13 @@ public class GameManager : MonoBehaviour
     //handle button presses to change game state in all states.
 
     public void OnClickNewGame(){
-
+        meshGenerator.StartNewGame();
     }
     public void OnClickResetGame(){
-
+        meshGenerator.ResetGame();
+    }
+    public void OnClickBackToPlaying(){
+        ChangeGameState(GameState.Playing);
     }
     public void OnClickDig() { ChangeGameState(GameState.Dig); }
     public void OnClickRaise() { ChangeGameState(GameState.Raise); }
@@ -229,6 +384,9 @@ public class GameManager : MonoBehaviour
         //raycast from mouse position to terrain, if hit, set brush position to hit position; else, set to (0,0,-100)
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        //find the vertex data most close to the hit point
+        closestVertex = null;
+        float closestDistance = float.MaxValue;
 
         if (Physics.Raycast(ray, out hit)) {
             if (LayerMask.LayerToName(hit.collider.gameObject.layer) == "Mountain") {
@@ -254,6 +412,11 @@ public class GameManager : MonoBehaviour
                     {
                         var v = meshGenerator.vertices2D[x, z];
                         Vector3 vertexWorldPos = meshGenerator.transform.TransformPoint(v.position);
+                        float dist = Vector3.Distance(vertexWorldPos, hit.point);
+                        if (dist < closestDistance) {
+                            closestDistance = dist;
+                            closestVertex = v;
+                        }
                         if (Vector3.Distance(vertexWorldPos, brushPosition) <= brushRadius)
                         {
                             selected.Add(v);
@@ -281,7 +444,10 @@ public class GameManager : MonoBehaviour
                 previousSelectedVertices = null;
                 selectedVertices = null;
             }
+            closestVertex = null;
         }
+
+        Debug.Log("UpdateBrush: selectedVertices count = " + (selectedVertices != null ? selectedVertices.Length.ToString() : "null"));
     }
 
     // Deselect all vertices and restore their original colors
@@ -304,5 +470,4 @@ public class GameManager : MonoBehaviour
         if (brush != null)
             brush.transform.position = new Vector3(0, 0, -100);
     }
-
 }

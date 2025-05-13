@@ -57,6 +57,7 @@ namespace AnnaUtility.ProceduralMountain
         public float treeRandomRadius = 0.5f;
         [Range(0f, 2f)]
         public float slopeThreshold = 0.5f;
+        public Vector2 treeNoiseOffset = Vector2.zero;
 
         [Header("Grass Placement")]
         public GameObject[] grassPrefabs;
@@ -156,6 +157,17 @@ namespace AnnaUtility.ProceduralMountain
             if(Input.GetKeyDown(KeyCode.Space)){
                 GenerateNewMountain();
             }
+        }
+
+        public void StartNewGame(){
+            //randomize the x, y offset of the base noise and tree noise
+            baseOffset = new Vector2(Random.Range(-100f, 100f), Random.Range(-100f, 100f));
+            treeNoiseOffset = new Vector2(Random.Range(-100f, 100f), Random.Range(-100f, 100f));
+            GenerateNewMountain();
+        }
+        
+        public void ResetGame(){
+            GenerateNewMountain();
         }
 
         public void GenerateNewMountain(){
@@ -272,7 +284,8 @@ namespace AnnaUtility.ProceduralMountain
             }
         }
 
-        private void UpdateMesh(){
+        public void UpdateMesh(){
+            Debug.Log("UpdateMesh called");
             // Rebuild the class-level arrays from VertexData
             int vertCount = (xSize + 1) * (zSize + 1);
             for (int i = 0, z = 0; z <= zSize; z++) {
@@ -335,7 +348,10 @@ namespace AnnaUtility.ProceduralMountain
                 int z = i / (xSize + 1);
                 // Only allow tree if slope is under threshold
                 if (vertices2D[x, z].slope > slopeThreshold) continue;
-                float perlinValue = Mathf.PerlinNoise(vertices[i].x * treeNoiseScale, vertices[i].z * treeNoiseScale);
+                float perlinValue = Mathf.PerlinNoise(
+                    vertices[i].x * treeNoiseScale + treeNoiseOffset.x,
+                    vertices[i].z * treeNoiseScale + treeNoiseOffset.y
+                );
                 if (perlinValue > treeNoiseThreshold && treePrefabs != null && treePrefabs.Length > 0)
                 {
                     // Probability increases as perlinValue approaches 1
@@ -471,5 +487,23 @@ namespace AnnaUtility.ProceduralMountain
             mesh.colors = colors;
         }
 
+        public void ApplyVertexRealColors(){
+            int i = 0;
+            for (int z = 0; z <= zSize; z++)
+            {
+                for (int x = 0; x <= xSize; x++)
+                {
+                    colors[i++] = vertices2D[x, z].color;
+                    print(vertices2D[x, z].color);
+                }
+            }
+            mesh.colors = colors;
+        }
+
+        public void Dig(VertexData selectedVertex)
+        {
+            selectedVertex.position.y -= 1;
+            Debug.Log("Lowered vertex to: " + selectedVertex.position.y);
+        }
     }
 }
