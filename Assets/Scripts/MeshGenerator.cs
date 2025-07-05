@@ -81,8 +81,9 @@ namespace AnnaUtility.ProceduralMountain
             public GameObject tree;
             private MeshGenerator parent;
             private Color originalColor;
+            public int xIndex, zIndex;
 
-            public VertexData(Vector3 position, float slope, Color color, MeshGenerator parent)
+            public VertexData(Vector3 position, float slope, Color color, MeshGenerator parent, int xIndex, int zIndex)
             {
                 this.position = position;
                 this.slope = slope;
@@ -90,6 +91,8 @@ namespace AnnaUtility.ProceduralMountain
                 this.tree = null;
                 this.parent = parent;
                 this.originalColor = color;
+                this.xIndex = xIndex;
+                this.zIndex = zIndex;
             }
 
             public Color GetDisplayColor()
@@ -143,7 +146,7 @@ namespace AnnaUtility.ProceduralMountain
         private Vector3[] vertices;
         private Color[] colors;
         
-        void Start()
+        void Awake()
         { 
             mesh = new Mesh();
             GetComponent<MeshFilter>().mesh = mesh;
@@ -185,7 +188,13 @@ namespace AnnaUtility.ProceduralMountain
             CalculateVerticesMinMaxHeight();
             CalculateVerticesSlope();
         }
-
+        
+        public float GetSlope(Vector3 vertex1, Vector3 vertex2){
+            float heightDiff = Mathf.Abs(vertex1.y - vertex2.y);
+            float distance = Vector3.Distance(vertex1, vertex2);
+            float slope = heightDiff / distance;
+            return slope;
+        }
         //create a mesh with perlin noise and fall off on the edges
         private void CreateMeshShape(){
             //create vertices2D
@@ -250,7 +259,7 @@ namespace AnnaUtility.ProceduralMountain
                     float edgeFallOff = Mathf.Pow(edgeX, edgeFalloffStrength) * Mathf.Pow(edgeZ, edgeFalloffStrength);
                     y *= Mathf.Max(edgeFallOff, 0.01f);
                     Vector3 pos = new Vector3(x, y, z);// the y value = height = noise value
-                    vertices2D[x, z] = new VertexData(pos, 0f, Color.black, this);
+                    vertices2D[x, z] = new VertexData(pos, 0f, Color.black, this, x, z);
                 }
             }
             // Flatten 2D array to 1D for Unity mesh

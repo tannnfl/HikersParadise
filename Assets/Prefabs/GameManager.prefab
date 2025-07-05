@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7347758155909446879}
   - component: {fileID: 9040942391442427342}
+  - component: {fileID: 1382857027734655832}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -45,4 +46,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brushPrefab: {fileID: 8069385421066058750, guid: 2cf36c960a1d65947b3e4535cb1360dc, type: 3}
-  currentGameState: 1
+  MenuUI: {fileID: 0}
+  PlayingUI: {fileID: 0}
+  GrassColor: {r: 0.3, g: 0.7, b: 0.2, a: 1}
+  StoneColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+--- !u!114 &1382857027734655832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2729261388294766451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b4211b51432cb048ad4ed1b98940d09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
