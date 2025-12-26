@@ -35,6 +35,16 @@ public class TrailManager : MonoBehaviour
             if(slope > 0.5f) {
                 Debug.Log("Cannot add vertex: " + vertex.position + " because the slope is too steep: " + slope);
                 return false;}
+            //check if the vertex forms an acute turn
+            if (vertices.Count >= 2) {
+                var A = vertices[vertices.Count - 2]; // 前一个拐点
+                var B = vertices[vertices.Count - 1]; // 当前末点
+                var C = vertex;                       // 候选新点
+                if (FormsAcuteTurn(A, B, C)) {
+                    Debug.Log("Cannot add vertex: " + vertex.position + " because it forms an acute turn at " + B.position);
+                    return false;
+                }
+            }
             //add the vertex to the list
             return true;
         }
@@ -60,19 +70,25 @@ public class TrailManager : MonoBehaviour
                     var neighbor = manager.meshGenerator.vertices2D[nx, nz];
                     if(vertices.Contains(neighbor)) continue;
                     if(canAddVertices.Contains(neighbor)) continue;
-                    if(IsFortyFiveDegreeCorner(vertex, neighbor, vertices[vertices.Count - 1])) continue;
                     canAddVertices.Add(neighbor);
                 }
             }
             Debug.Log("Can add vertices: " + canAddVertices.Count);
         }
-        private bool IsFortyFiveDegreeCorner(MeshGenerator.VertexData v1, MeshGenerator.VertexData center, MeshGenerator.VertexData v3)
+            // —— 关键：锐角判定（在 B 处看 A->B 与 B->C 的夹角）——
+        private static bool FormsAcuteTurn(MeshGenerator.VertexData A,
+                                        MeshGenerator.VertexData B,
+                                        MeshGenerator.VertexData C)
         {
-            Vector2 a = new Vector2(v1.xIndex - center.xIndex, v1.zIndex - center.zIndex);
-            Vector2 b = new Vector2(v3.xIndex - center.xIndex, v3.zIndex - center.zIndex);
+            // 用网格索引做整型向量，稳且无浮点误差
+            var u = new Vector2Int(A.xIndex - B.xIndex, A.zIndex - B.zIndex);
+            var v = new Vector2Int(C.xIndex - B.xIndex, C.zIndex - B.zIndex);
 
-            float angle = Vector2.Angle(a, b);
-            return Mathf.Approximately(angle, 45f);
+            // 任何一段为零向量就不当成锐角（等价于允许原地/重复点被其他逻辑拦掉）
+            if (u == Vector2Int.zero || v == Vector2Int.zero) return false;
+
+            int dot = u.x * v.x + u.y * v.y; // u·v
+            return dot > 0;                  // >0 ⇒ 锐角
         }
 
     }

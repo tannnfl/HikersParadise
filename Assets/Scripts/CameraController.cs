@@ -31,6 +31,14 @@ public class CameraController : MonoBehaviour
             float mouseX = Input.GetAxis("Mouse X");
             transform.RotateAround(Center.transform.position, Vector3.up, mouseX * rotationSpeed);
         }
+        if (Input.GetKey(KeyCode.Q))
+        {
+            transform.RotateAround(Center.transform.position, Vector3.up, -rotationSpeed * Time.deltaTime);
+        }
+        if (Input.GetKey(KeyCode.E))
+        {
+            transform.RotateAround(Center.transform.position, Vector3.up, rotationSpeed * Time.deltaTime);
+        }
 
         //move center with wasd
         //maybe not needed

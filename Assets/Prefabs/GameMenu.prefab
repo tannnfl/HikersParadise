@@ -146,6 +146,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &1725034607612190393
 GameObject:
   m_ObjectHideFlags: 0
@@ -428,6 +429,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &2332720858039979344
 GameObject:
   m_ObjectHideFlags: 0
@@ -574,6 +576,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &2860349206754626949
 GameObject:
   m_ObjectHideFlags: 0
@@ -1368,6 +1371,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &5716122216699956118
 GameObject:
   m_ObjectHideFlags: 0
@@ -1514,6 +1518,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &5816977152655113652
 GameObject:
   m_ObjectHideFlags: 0
@@ -1764,6 +1769,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &6173713027599738433
 GameObject:
   m_ObjectHideFlags: 0
@@ -2046,6 +2052,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &7582131081670604968
 GameObject:
   m_ObjectHideFlags: 0
@@ -2254,8 +2261,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 28bb5eb2fdff945dfba59fdc275b6925, type: 2}
+  m_sharedMaterial: {fileID: -5999753461095765120, guid: 28bb5eb2fdff945dfba59fdc275b6925, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2590,6 +2597,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &8096881633883549413
 GameObject:
   m_ObjectHideFlags: 0
@@ -3148,6 +3156,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &8599698842317063683
 GameObject:
   m_ObjectHideFlags: 0
@@ -3404,3 +3413,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0

@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Hiker's Paradise
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 3246ba4a7e6f840d4bc8b72785431dea, type: 2}
+  m_sharedMaterial: {fileID: -8753319779378868595, guid: 3246ba4a7e6f840d4bc8b72785431dea, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -98,7 +98,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 32
+  m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 4096
   m_textAlignment: 65535
@@ -206,8 +206,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 3246ba4a7e6f840d4bc8b72785431dea, type: 2}
+  m_sharedMaterial: {fileID: -8753319779378868595, guid: 3246ba4a7e6f840d4bc8b72785431dea, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -237,7 +237,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 32
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -628,6 +628,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &5359926215782708398
 GameObject:
   m_ObjectHideFlags: 0
@@ -774,6 +775,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &7241762603832758011
 GameObject:
   m_ObjectHideFlags: 0
@@ -920,6 +922,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d3d5f2635ef3854ba0b068cc42a711e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  activeState: 0
 --- !u!1 &7617248696540587549
 GameObject:
   m_ObjectHideFlags: 0
@@ -990,8 +993,8 @@ MonoBehaviour:
 
 '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 3246ba4a7e6f840d4bc8b72785431dea, type: 2}
+  m_sharedMaterial: {fileID: -8753319779378868595, guid: 3246ba4a7e6f840d4bc8b72785431dea, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1021,7 +1024,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 32
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535

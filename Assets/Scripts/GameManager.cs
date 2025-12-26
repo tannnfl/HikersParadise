@@ -64,7 +64,7 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.C)) ChangeGameState(GameState.CreateTrail);
         if (Input.GetKeyDown(KeyCode.E)) ChangeGameState(GameState.EditTrail);
         StateUpdate(_currentState);
-        print(_currentState);
+        //print(_currentState);
     }
 
     private void StateUpdate(GameState state)
